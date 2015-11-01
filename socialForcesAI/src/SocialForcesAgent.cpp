@@ -237,7 +237,7 @@ std::pair<float, Util::Point> minimum_distance(Util::Point l1, Util::Point l2, U
 
 Util::Vector SocialForcesAgent::calcProximityForce(float dt)
 {
-    std::cerr<<"<<<calcProximityForce>>> Please Implement my body\n";
+    //std::cerr<<"<<<calcProximityForce>>> Please Implement my body\n";
 
     return Util::Vector(0,0,0);
 }
@@ -263,9 +263,43 @@ Util::Vector SocialForcesAgent::calcRepulsionForce(float dt)
 
 Util::Vector SocialForcesAgent::calcAgentRepulsionForce(float dt)
 {
-    std::cerr<<"<<<calcAgentRepulsionForce>>> Please Implement my body\n";
+    Util::Vector agent_repulsion_force = Util::Vector(0,0,0);
+	std::vector<Util::Vector> agent_repulsion_force_list; 
+	//SteerLib::EngineInterface * engineInfo; 
 
-    return Util::Vector(0,0,0);
+	std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors; 
+	//void getItemsInRange(std::set<SpatialDatabaseItemPtr> & neighborList, float xmin, float xmax, float zmin, float zmax, SpatialDatabaseItemPtr exclude);
+	gEngine->getSpatialDatabase()->getItemsInRange(_neighbors,
+		_position.x - (this->_radius + _SocialForcesParams.sf_query_radius),
+		_position.x + (this->_radius + _SocialForcesParams.sf_query_radius),
+		_position.z - (this->_radius + _SocialForcesParams.sf_query_radius),
+		_position.z + (this->_radius + _SocialForcesParams.sf_query_radius),
+		dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
+
+
+	SteerLib::AgentInterface *tmp_agent; 
+	for(std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbour = _neighbors.begin(); neighbour != _neighbors.end(); neighbour++)
+	{
+		if( (*neighbour) -> isAgent() ) // exclude obstacle
+		{
+			tmp_agent = dynamic_cast<SteerLib::AgentInterface *>(*neighbour); 
+		}
+		else
+		{
+			continue; 
+		}
+
+		if( (id() != tmp_agent->id()) && (tmp_agent->computePenetration(this->position(), this->radius()) > 0.000001))
+		{
+			agent_repulsion_force = agent_repulsion_force + 
+			( tmp_agent->computePenetration(this->position(), this->radius()) * _SocialForcesParams.sf_agent_body_force * dt) *
+			normalize(position() - tmp_agent->position()); 
+		}
+
+	}
+	agent_repulsion_force = (agent_repulsion_force / AGENT_MASS)* dt; 
+
+    return agent_repulsion_force;
 }
 
 
