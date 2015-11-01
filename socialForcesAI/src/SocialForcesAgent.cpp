@@ -274,10 +274,11 @@ Util::Vector SocialForcesAgent::calcWallRepulsionForce(float dt)
     //std::cerr<<"<<<calcWallRepulsionForce>>> Please Implement my body\n";
 	Util::Vector wall_repulsion_force = Util::Vector(0,0,0);
 	std::vector<Util::Vector> wall_repulsion_force_list; 
+	//SteerLib::EngineInterface * engineInfo; 
 
 	std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors; 
 	//void getItemsInRange(std::set<SpatialDatabaseItemPtr> & neighborList, float xmin, float xmax, float zmin, float zmax, SpatialDatabaseItemPtr exclude);
-	getSimulationEngine()->getSpatialDatabase()->getItemsInRange(_neighbors,
+	gEngine->getSpatialDatabase()->getItemsInRange(_neighbors,
 		_position.x - (this->_radius + _SocialForcesParams.sf_query_radius),
 		_position.x + (this->_radius + _SocialForcesParams.sf_query_radius),
 		_position.z - (this->_radius + _SocialForcesParams.sf_query_radius),
@@ -285,7 +286,7 @@ Util::Vector SocialForcesAgent::calcWallRepulsionForce(float dt)
 		dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
 
 	SteerLib::ObstacleInterface *tmp_ob; 
-	for(std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbour = neighbors.begin(); neighbour != _neighbors.end(); neighbour++)
+	for(std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbour = _neighbors.begin(); neighbour != _neighbors.end(); neighbour++)
 	{
 		if(!(*neighbour) -> isAgent()) // exclude agents
 		{
@@ -314,7 +315,7 @@ Util::Vector SocialForcesAgent::calcWallRepulsionForce(float dt)
 	{
 		wall_repulsion_force += *it; 
 	}
-
+	wall_repulsion_force = (wall_repulsion_force / AGENT_MASS)* dt; 
     return wall_repulsion_force;
 }
 
